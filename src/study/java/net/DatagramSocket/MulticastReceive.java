@@ -17,8 +17,8 @@ public class MulticastReceive {
         test();  
     }  
       
-    public static void test() throws Exception{  
-        InetAddress group = InetAddress.getByName("224.0.100.2");//组播地址  
+    public static void test() throws Exception{//"224.0.100.2"
+        InetAddress group = InetAddress.getByName("224.0.0.251");//组播地址  
         int port = 8888;  
         MulticastSocket msr = null;//创建组播套接字  
         try {  
