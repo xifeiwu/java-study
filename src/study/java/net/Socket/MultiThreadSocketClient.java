@@ -40,7 +40,7 @@ public class MultiThreadSocketClient {
                     String msg = null;
                     while ((msg = br.readLine()) != null)
                     System.out.println(msg);
-                } catch (IOException e) {                    
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
