@@ -30,9 +30,9 @@ public class UserFrame extends JFrame implements ActionListener {
 
 	private JMenuBar menuBar;
 	private JMenu clientMenu;
-	private JMenuItem socketClientMenuItem, httpClientMenuItem, stopClientMenuItem;
+	private JMenuItem connectToSocketMI, httpClientMenuItem, stopClientMI;
     private JMenu serverMenu;
-    private JMenuItem socketServerMenuItem, httpServerMenuItem, stopServerMenuItem;
+    private JMenuItem startSocketServerMI, httpServerMenuItem, stopServerMI;
 
 	private Container container;
 	private JTextArea historyTextArea;
@@ -55,27 +55,27 @@ public class UserFrame extends JFrame implements ActionListener {
 		container = this.getContentPane();
 
 		clientMenu = new JMenu("客户端参数");
-		socketClientMenuItem = new JMenuItem("连接远程ServerSocket");
+		connectToSocketMI = new JMenuItem("连接远程ServerSocket");
 //		httpClientMenuItem = new JMenuItem("Http客户端");
-		stopClientMenuItem = new JMenuItem("关闭连接");
-		socketClientMenuItem.addActionListener(this);
+		stopClientMI = new JMenuItem("关闭连接");
+		connectToSocketMI.addActionListener(this);
 //		httpClientMenuItem.addActionListener(this);
-		stopClientMenuItem.addActionListener(this);
-		clientMenu.add(socketClientMenuItem);
+		stopClientMI.addActionListener(this);
+		clientMenu.add(connectToSocketMI);
 //		clientMenu.add(httpClientMenuItem);
-		clientMenu.add(stopClientMenuItem);
+		clientMenu.add(stopClientMI);
         menuBar.add(clientMenu);
 		
 		serverMenu = new JMenu("服务器参数");
-        socketServerMenuItem = new JMenuItem("开启ServerSocket");
+        startSocketServerMI = new JMenuItem("开启ServerSocket");
 //        httpServerMenuItem = new JMenuItem("Http客户端");
-//        stopServerMenuItem = new JMenuItem("关闭客户端");
-        socketServerMenuItem.addActionListener(this);
+//        stopServerMI = new JMenuItem("关闭客户端");
+        startSocketServerMI.addActionListener(this);
 //        httpServerMenuItem.addActionListener(this);
-//        stopServerMenuItem.addActionListener(this);
-        serverMenu.add(socketServerMenuItem);
+//        stopServerMI.addActionListener(this);
+        serverMenu.add(startSocketServerMI);
 //        clientMenu.add(httpServerMenuItem);
-//        clientMenu.add(stopServerMenuItem);
+//        clientMenu.add(stopServerMI);
 		menuBar.add(serverMenu);
 		
 		setJMenuBar(menuBar);
@@ -94,7 +94,7 @@ public class UserFrame extends JFrame implements ActionListener {
 		buttomPanel = new JPanel();
 		buttomPanel.setLayout(new BorderLayout());
 		buttomPanel.add(sendTextField, BorderLayout.CENTER);
-		buttomPanel.add(sendBtn, BorderLayout.EAST);
+		buttomPanel.add(sendBtn, BorderLayout.LINE_END);
 		buttomPanel.setBorder(BorderFactory.createEmptyBorder(1, 3, 3, 3));
 
 		container.add(scorllTextArea, BorderLayout.CENTER);
@@ -112,38 +112,58 @@ public class UserFrame extends JFrame implements ActionListener {
 		});
 	}
 	private JDialog mDialog;
+	private JButton confirmBtn, cancelBtn;
+	private JTextField hostField, portField;
 	private String host;
 	private int port;
 	private void initDialog(){
 	    JPanel mPanel = new JPanel();
         GridLayout mLayout = new GridLayout(0,2);
-        JLabel hostLabel = new JLabel("IP地址");
-        JLabel portLabel = new JLabel("端口号");
+        mLayout.setHgap(10);
+        mLayout.setVgap(10);
+        JLabel hostLabel = new JLabel("IP地址：");
+        JLabel portLabel = new JLabel("端口号：");
 
-        JTextField hostField = new JTextField();
-        hostField.setColumns(10);
-        JTextField portField = new JTextField();
-        portField.setColumns(10);
+        hostField = new JTextField();
+        hostField.setColumns(16);
+        portField = new JTextField();
+        portField.setColumns(16);
         
         hostLabel.setLabelFor(hostField);
         portLabel.setLabelFor(portField);
+        
+        confirmBtn = new JButton("确定");
+        cancelBtn = new JButton("取消");
+        confirmBtn.addActionListener(this);
+        cancelBtn.addActionListener(this);
 
-        mPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        mPanel.setPreferredSize(new Dimension(400, 0));
+        mPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+//        mPanel.setPreferredSize(new Dimension(400, 0));
         mPanel.setLayout(mLayout);
         mPanel.add(hostLabel);
         mPanel.add(hostField);
         mPanel.add(portLabel);
         mPanel.add(portField);
+        mPanel.add(confirmBtn);
+        mPanel.add(cancelBtn);
         
-        mDialog = new JDialog();
+        mDialog = new JDialog(this,true);
+        mDialog.setTitle("输入IP和端口号");
         mDialog.getContentPane().add(mPanel);
-        mDialog.pack();
-        mDialog.setVisible(true);	    
+        mDialog.pack();   
+	}
+	private void showDialog(){
+	    if(null == mDialog){
+	        initDialog();
+	    }
+        mDialog.setVisible(true);   
+	}
+	private void hideDialog(){
+        mDialog.setVisible(false);	    
 	}
 	private void myLog(String msg){
         System.out.println(msg);
-        appendToHistoryTextArea("message:", msg);
+        appendToHistoryTextArea("log:", msg);
 	}
 
     public void appendToHistoryTextArea(String name, String msg){
@@ -159,23 +179,33 @@ public class UserFrame extends JFrame implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
 		JComponent item = (JComponent) e.getSource();
-		if (item.equals(socketClientMenuItem)) {
+		if (item.equals(connectToSocketMI)) {
 			System.out.println("socketClient");
 			clientType = SOCKETCLIENT;
 //			String inputValue = JOptionPane.showInputDialog("Input IP and Port for Destination Server:");
-			JOptionPane.showMessageDialog(instance, "Eggs aren't supposed to be green.");
+			showDialog();
 //			serverThread = new Thread(clientRun);
 //			serverThread.start();
-		}
-
-		if (item.equals(httpClientMenuItem)) {
-			System.out.println("HttpClient");
-			clientType = HTTPCLIENT;
-//			serverThread = new Thread(clientRun);
-//			serverThread.start();
-		}
-
-		if (item.equals(stopClientMenuItem)) {
+		}else
+		if (item.equals(startSocketServerMI)) {
+		}else
+		if(item.equals(confirmBtn)){
+		    host = hostField.getText();
+		    String portStr = portField.getText();
+		    if((null != host) && (null != portStr)){
+    		    port = Integer.parseInt(portStr);
+    		    myLog("You want to connet to server " + host + ": " + port);
+    		    portField.setText("");
+    		    portField.setText("");
+    		    this.hideDialog();
+		    }
+		}else
+		if(item.equals(cancelBtn)){
+            portField.setText("");
+            portField.setText("");
+            this.hideDialog();	    
+		}else
+		if (item.equals(stopClientMI)) {
 			System.out.println("stopClient");
 			closeClient();
 		}
@@ -246,8 +276,8 @@ public class UserFrame extends JFrame implements ActionListener {
 	    int HEIGHT = 650;
         UserFrame userFrame = new UserFrame();
         userFrame.setPreferredSize(new Dimension(WIDTH, HEIGHT));
-//        userFrame.pack();
-//        userFrame.setVisible(true);
-        userFrame.initDialog();
+        userFrame.pack();
+        userFrame.setVisible(true);
+//        userFrame.initDialog();
 	}
 }
