@@ -14,13 +14,11 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
-import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -30,7 +28,7 @@ public class UserFrame extends JFrame implements ActionListener {
 
 	private JMenuBar menuBar;
 	private JMenu clientMenu;
-	private JMenuItem connectToSocketMI, httpClientMenuItem, stopClientMI;
+	private JMenuItem startClientSocketMI, httpClientMenuItem, stopClientMI;
     private JMenu serverMenu;
     private JMenuItem startSocketServerMI, httpServerMenuItem, stopServerMI;
 
@@ -47,6 +45,7 @@ public class UserFrame extends JFrame implements ActionListener {
 	private final int NONE = 0, SOCKETCLIENT = 1, HTTPCLIENT = 2;
 
 	private UserFrame instance;
+	private SocketConnection socketConn;
 
 	public UserFrame() {
 		this.setTitle("用户界面");
@@ -55,13 +54,13 @@ public class UserFrame extends JFrame implements ActionListener {
 		container = this.getContentPane();
 
 		clientMenu = new JMenu("客户端参数");
-		connectToSocketMI = new JMenuItem("连接远程ServerSocket");
+		startClientSocketMI = new JMenuItem("连接远程ServerSocket");
 //		httpClientMenuItem = new JMenuItem("Http客户端");
 		stopClientMI = new JMenuItem("关闭连接");
-		connectToSocketMI.addActionListener(this);
+		startClientSocketMI.addActionListener(this);
 //		httpClientMenuItem.addActionListener(this);
 		stopClientMI.addActionListener(this);
-		clientMenu.add(connectToSocketMI);
+		clientMenu.add(startClientSocketMI);
 //		clientMenu.add(httpClientMenuItem);
 		clientMenu.add(stopClientMI);
         menuBar.add(clientMenu);
@@ -69,13 +68,13 @@ public class UserFrame extends JFrame implements ActionListener {
 		serverMenu = new JMenu("服务器参数");
         startSocketServerMI = new JMenuItem("开启ServerSocket");
 //        httpServerMenuItem = new JMenuItem("Http客户端");
-//        stopServerMI = new JMenuItem("关闭客户端");
+        stopServerMI = new JMenuItem("关闭ServerSocket");
         startSocketServerMI.addActionListener(this);
 //        httpServerMenuItem.addActionListener(this);
-//        stopServerMI.addActionListener(this);
+        stopServerMI.addActionListener(this);
         serverMenu.add(startSocketServerMI);
 //        clientMenu.add(httpServerMenuItem);
-//        clientMenu.add(stopServerMI);
+        serverMenu.add(stopServerMI);
 		menuBar.add(serverMenu);
 		
 		setJMenuBar(menuBar);
@@ -106,16 +105,18 @@ public class UserFrame extends JFrame implements ActionListener {
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
 			    myLog("退出用户界面。。。");
-				closeClient();
+//				closeClient();
 				System.exit(0);
 			}
 		});
+
+		socketConn = new SocketConnection(this);
 	}
 	private JDialog mDialog;
 	private JButton confirmBtn, cancelBtn;
 	private JTextField hostField, portField;
-	private String host;
-	private int port;
+	private String destAddress;
+	private int destPort;
 	private void initDialog(){
 	    JPanel mPanel = new JPanel();
         GridLayout mLayout = new GridLayout(0,2);
@@ -161,7 +162,7 @@ public class UserFrame extends JFrame implements ActionListener {
 	private void hideDialog(){
         mDialog.setVisible(false);	    
 	}
-	private void myLog(String msg){
+	public void myLog(String msg){
         System.out.println(msg);
         appendToHistoryTextArea("log:", msg);
 	}
@@ -179,22 +180,31 @@ public class UserFrame extends JFrame implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
 		JComponent item = (JComponent) e.getSource();
-		if (item.equals(connectToSocketMI)) {
+		if (item.equals(startClientSocketMI)) {
 			System.out.println("socketClient");
 			clientType = SOCKETCLIENT;
 //			String inputValue = JOptionPane.showInputDialog("Input IP and Port for Destination Server:");
 			showDialog();
-//			serverThread = new Thread(clientRun);
-//			serverThread.start();
+//            myLog("You want to connet to serverw " + destAddress + ": " + destPort);
+			socketConn.startClientSocket(destAddress, destPort);
 		}else
-		if (item.equals(startSocketServerMI)) {
+        if (item.equals(stopClientMI)) {
+//	          System.out.println("stopClient");
+//	          closeClient();
+            socketConn.stopClientSocket();          
+        }
+        if (item.equals(startSocketServerMI)) {
+            socketConn.startServerSocket(8000);
+        }else
+		if(item.equals(stopServerMI)){
+		    socketConn.stopServerSocket();
 		}else
 		if(item.equals(confirmBtn)){
-		    host = hostField.getText();
+		    destAddress = hostField.getText();
 		    String portStr = portField.getText();
-		    if((null != host) && (null != portStr)){
-    		    port = Integer.parseInt(portStr);
-    		    myLog("You want to connet to server " + host + ": " + port);
+		    if((null != destAddress) && (null != portStr)){
+		        destPort = Integer.parseInt(portStr);
+//    		    myLog("You want to connet to server " + destAddress + ": " + destPort);
     		    portField.setText("");
     		    portField.setText("");
     		    this.hideDialog();
@@ -205,10 +215,6 @@ public class UserFrame extends JFrame implements ActionListener {
             portField.setText("");
             this.hideDialog();	    
 		}else
-		if (item.equals(stopClientMI)) {
-			System.out.println("stopClient");
-			closeClient();
-		}
 
 		if (item.equals(sendTextField) || item.equals(sendBtn)) {
 			// System.out.println("sendTextField");
@@ -256,20 +262,14 @@ public class UserFrame extends JFrame implements ActionListener {
 
     };
 
-    private void closeClient(){
-        switch (clientType) {
-        case SOCKETCLIENT:
-//          if (socketClient != null) {
-//              socketClient.close();
-//          }
-            break;
-        case HTTPCLIENT:
-//          if (httpClient != null) {
-//              httpClient.close();
-//          }
-            break;
-        }
-    }
+//    private void closeClient(){
+//        switch (clientType) {
+//        case SOCKETCLIENT:
+//            break;
+//        case HTTPCLIENT:
+//            break;
+//        }
+//    }
 
 	public static void main(String[] args){
 	    int WIDTH = 500;
