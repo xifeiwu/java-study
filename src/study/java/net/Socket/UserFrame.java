@@ -153,6 +153,29 @@ public class UserFrame extends JFrame implements ActionListener {
         mDialog.getContentPane().add(mPanel);
         mDialog.pack();   
 	}
+
+    public void myLog(String msg){
+        int hour, minute, second;
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        hour = calendar.get(Calendar.HOUR_OF_DAY);
+        minute = calendar.get(Calendar.MINUTE);
+        second = calendar.get(Calendar.SECOND);
+        String content = "LOG(" + hour + ":" + minute + ":" + second + "):" + msg;
+        historyTextArea.append(content + "\n");
+        System.out.println(content);
+    }
+
+    public void myLog(String name, String msg){
+        int hour, minute, second;
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        hour = calendar.get(Calendar.HOUR_OF_DAY);
+        minute = calendar.get(Calendar.MINUTE);
+        second = calendar.get(Calendar.SECOND);
+        String content = name + "（" + hour + ":" + minute + ":" + second + "）：" + msg;
+        historyTextArea.append(content + "\n");
+        System.out.println(content);
+    }
+    
 	private void showDialog(){
 	    if(null == mDialog){
 	        initDialog();
@@ -160,21 +183,9 @@ public class UserFrame extends JFrame implements ActionListener {
         mDialog.setVisible(true);   
 	}
 	private void hideDialog(){
-        mDialog.setVisible(false);	    
+        mDialog.setVisible(false);
 	}
-	public void myLog(String msg){
-        System.out.println(msg);
-        appendToHistoryTextArea("log:", msg);
-	}
-
-    public void appendToHistoryTextArea(String name, String msg){
-        int hour, minute, second;
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        hour = calendar.get(Calendar.HOUR_OF_DAY);
-        minute = calendar.get(Calendar.MINUTE);
-        second = calendar.get(Calendar.SECOND);
-        historyTextArea.append(name + "（" + hour + "：" + minute + "：" + second + "）：" + msg + "\n");
-    }
+	
 	// private SimpleHttpServer httpServer;
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -221,23 +232,18 @@ public class UserFrame extends JFrame implements ActionListener {
 			String text = sendTextField.getText();
 			if (!text.equals("")) {
 				sendTextField.setText("");
-				switch (clientType) {
-				case SOCKETCLIENT:
-//					if (socketClient != null) {
-//						socketClient.sendMsg(text);
-//					}
-					appendToHistoryTextArea("客户端", text);
-					break;
-				case HTTPCLIENT:
-//					if (httpClient != null) {
-//						httpClient.sendMsg(text);
-//					}
-					appendToHistoryTextArea("客户端", text);
-					break;
-				case NONE:
-					appendToHistoryTextArea("提示", "服务器还没有启动");
-					break;
-				}
+				socketConn.sendMessage(text);
+//				switch (clientType) {
+//				case SOCKETCLIENT:
+//					appendToHistoryTextArea("客户端", text);
+//					break;
+//				case HTTPCLIENT:
+//					appendToHistoryTextArea("客户端", text);
+//					break;
+//				case NONE:
+//					appendToHistoryTextArea("提示", "服务器还没有启动");
+//					break;
+//				}
 			}
 		}
 	}
