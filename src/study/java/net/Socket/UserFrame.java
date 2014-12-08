@@ -1,9 +1,12 @@
 package study.java.net.Socket;
+import java.awt.AWTEvent;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -24,6 +27,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+
+@SuppressWarnings("serial")
 public class UserFrame extends JFrame implements ActionListener {
 
 	private JMenuBar menuBar;
@@ -104,14 +109,55 @@ public class UserFrame extends JFrame implements ActionListener {
 		clientType = NONE;
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-			    myLog("退出用户界面。。。");
+//			    myLog("退出用户界面。。。");
 //				closeClient();
 				System.exit(0);
 			}
 		});
 
 		socketConn = new SocketConnection(this);
+        eventQueue = Toolkit.getDefaultToolkit().getSystemEventQueue();
 	}
+
+//    public void myLog(String msg){
+//        int hour, minute, second;
+//        calendar.setTimeInMillis(System.currentTimeMillis());
+//        hour = calendar.get(Calendar.HOUR_OF_DAY);
+//        minute = calendar.get(Calendar.MINUTE);
+//        second = calendar.get(Calendar.SECOND);
+//        String content = "LOG(" + hour + ":" + minute + ":" + second + "):" + msg;
+//        historyTextArea.append(content + "\n");
+//        System.out.println(content);
+//    }
+
+	public void myLog(String name, String msg){
+        eventQueue.postEvent( new LOGAWTEvent( this, name, msg));
+	}
+    public void processLog(String name, String msg){
+        int hour, minute, second;
+        calendar.setTimeInMillis(System.currentTimeMillis());
+        hour = calendar.get(Calendar.HOUR_OF_DAY);
+        minute = calendar.get(Calendar.MINUTE);
+        second = calendar.get(Calendar.SECOND);
+        String content = name + "（" + hour + ":" + minute + ":" + second + "）：" + msg;
+        historyTextArea.append(content + "\n");
+        System.out.println(content);
+    }
+    
+    private EventQueue eventQueue = null;
+    @Override
+    protected void processEvent(AWTEvent e) {
+        // TODO Auto-generated method stub
+        if ( e instanceof LOGAWTEvent )
+        {
+            LOGAWTEvent ev = (LOGAWTEvent) e;
+//            System.out.print(ev.getName());
+            processLog(ev.getName(), ev.getMessage());
+        }else{
+            super.processEvent(e);
+        }
+    }
+    
 	private JDialog mDialog;
 	private JButton confirmBtn, cancelBtn;
 	private JTextField hostField, portField;
@@ -154,29 +200,7 @@ public class UserFrame extends JFrame implements ActionListener {
         mDialog.pack();   
 	}
 
-    public void myLog(String msg){
-        int hour, minute, second;
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        hour = calendar.get(Calendar.HOUR_OF_DAY);
-        minute = calendar.get(Calendar.MINUTE);
-        second = calendar.get(Calendar.SECOND);
-        String content = "LOG(" + hour + ":" + minute + ":" + second + "):" + msg;
-        historyTextArea.append(content + "\n");
-        System.out.println(content);
-    }
-
-    public void myLog(String name, String msg){
-        int hour, minute, second;
-        calendar.setTimeInMillis(System.currentTimeMillis());
-        hour = calendar.get(Calendar.HOUR_OF_DAY);
-        minute = calendar.get(Calendar.MINUTE);
-        second = calendar.get(Calendar.SECOND);
-        String content = name + "（" + hour + ":" + minute + ":" + second + "）：" + msg;
-        historyTextArea.append(content + "\n");
-        System.out.println(content);
-    }
-    
-	private void showDialog(){
+    private void showDialog(){
 	    if(null == mDialog){
 	        initDialog();
 	    }
@@ -286,4 +310,26 @@ public class UserFrame extends JFrame implements ActionListener {
         userFrame.setVisible(true);
 //        userFrame.initDialog();
 	}
+}
+
+
+@SuppressWarnings("serial")
+class LOGAWTEvent extends AWTEvent {
+    public static final int EVENT_ID = AWTEvent.RESERVED_ID_MAX + 1;
+    private String mName;
+    private String mMessage;
+
+    LOGAWTEvent(Object target, String name, String message) {
+        super(target, EVENT_ID);
+        mName = name;
+        mMessage = message;
+    }
+
+    public String getName() {
+        return mName;
+    }
+
+    public String getMessage() {
+        return mMessage;
+    }
 }
