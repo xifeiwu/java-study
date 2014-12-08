@@ -45,26 +45,16 @@ public class SocketConnection {
         ServerThread.start();
     }
     public void stopServerSocket(){
-        if((null != ServerThread) && (ServerThread.isAlive())){
+        if((null != ServerThread) && (!mServerSocket.isClosed())){//ServerThread.isAlive()
             stopClientSocket();
             ServerThread.interrupt();
             try {
                 mServerSocket.close();
-                myLog("LOG", "ServerSocket Has Closed.");
+                myLog("LOG", "ServerSocket Closed.");
             } catch (IOException ioe) {
                 myLog("LOG", "Error when stop ServerSocket, As Below:");
                 ioe.printStackTrace();
-            }    
-//            try {
-//                if(null != remoteSocket){
-//                    remoteSocket.close();
-//                    myLog(getSocketName(remoteSocket) + " has closed.");
-//                }
-//            } catch (IOException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//            }            
-//            this.stopChatting();
+            }
         } else {
             myLog("LOG", "ServerSocket is Not Running.");            
         }
@@ -88,7 +78,7 @@ public class SocketConnection {
                 while (!Thread.currentThread().isInterrupted() && serverThreadFlag) {
                     remoteSocket = mServerSocket.accept();
                     String remoteSocketName = getSocketName(remoteSocket);
-                    myLog("LOG", remoteSocketName + " has connected.");
+                    myLog("LOG", remoteSocketName + " is Connected.");
                     socketPool.put(remoteSocketName, remoteSocket);
                     serverThreadFlag = false;
                 }
@@ -100,7 +90,13 @@ public class SocketConnection {
         }
     };
 
-    public void startClientSocket(String address, int port){
+    public boolean startClientSocket(String address, int port){
+        try{
+            new Socket(address, port).sendUrgentData(0xFF);
+        }catch(Exception ex){
+            myLog("LOG", "ServerSocket " + address + ":" + port +" is NOT open.");
+            return false;
+        }
         try {
             remoteSocket = new Socket(address, port);
         } catch (UnknownHostException e) {
@@ -114,6 +110,7 @@ public class SocketConnection {
         }
         myLog("LOG", "Socket Connection to " + address + ":" + port + " Success.");
         startChatting(remoteSocket);
+        return true;
     }
 
     public void stopClientSocket() {
@@ -192,23 +189,30 @@ public class SocketConnection {
         }
     }
 
-    private PrintWriter getWriter(Socket socket) throws IOException{
-        OutputStream stream = socket.getOutputStream();
-        OutputStreamWriter streamWriter = new OutputStreamWriter(stream);
-        BufferedWriter bufferedWriter = new BufferedWriter(streamWriter);
-        PrintWriter pw = new PrintWriter(bufferedWriter);
+    private PrintWriter getWriter(Socket socket){// throws IOException
+        PrintWriter pw = null;
+        try {
+            OutputStream stream = socket.getOutputStream();
+            OutputStreamWriter streamWriter = new OutputStreamWriter(stream);
+            BufferedWriter bufferedWriter = new BufferedWriter(streamWriter);
+            pw = new PrintWriter(bufferedWriter);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         return pw;
-//        return new PrintWriter(
-//                new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), 
-//                        true);
     }
-    private BufferedReader getReader(Socket socket) throws IOException{
-        InputStream stream = socket.getInputStream();
-        InputStreamReader streamReader = new InputStreamReader(stream);
-        BufferedReader bufferedReader = new BufferedReader(streamReader);
+    private BufferedReader getReader(Socket socket){// throws IOException
+        BufferedReader bufferedReader = null;
+        try {
+            InputStream stream = socket.getInputStream();
+            InputStreamReader streamReader = new InputStreamReader(stream);
+            bufferedReader = new BufferedReader(streamReader);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         return bufferedReader;
-//        return new BufferedReader(new InputStreamReader(
-//                socket.getInputStream()));
     }
 
     private String getSocketName(Socket socket){

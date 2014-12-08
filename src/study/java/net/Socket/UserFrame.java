@@ -213,12 +213,10 @@ public class UserFrame extends JFrame implements ActionListener {
 			socketConn.startClientSocket(destAddress, destPort);
 		}else
         if (item.equals(stopClientMI)) {
-//	          System.out.println("stopClient");
-//	          closeClient();
             socketConn.stopClientSocket();          
         }
         if (item.equals(startSocketServerMI)) {
-            socketConn.startServerSocket(8000);
+            socketConn.startServerSocket(9090);
         }else
 		if(item.equals(stopServerMI)){
 		    socketConn.stopServerSocket();
