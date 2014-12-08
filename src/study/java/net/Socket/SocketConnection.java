@@ -117,7 +117,8 @@ public class SocketConnection {
     }
 
     public void stopClientSocket() {
-        if (null != remoteSocket) {
+        this.stopChatting();
+        if ((null != remoteSocket) && (!remoteSocket.isClosed())) {
             try {
                 remoteSocket.close();
                 myLog("LOG", getSocketName(remoteSocket) + " has closed.");
@@ -126,7 +127,6 @@ public class SocketConnection {
                 myLog("LOG", "Exception In stopClientSocket IOException, As Below:");
                 e.printStackTrace();
             }
-            this.stopChatting();
         }
     }
 

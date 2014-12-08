@@ -119,17 +119,6 @@ public class UserFrame extends JFrame implements ActionListener {
         eventQueue = Toolkit.getDefaultToolkit().getSystemEventQueue();
 	}
 
-//    public void myLog(String msg){
-//        int hour, minute, second;
-//        calendar.setTimeInMillis(System.currentTimeMillis());
-//        hour = calendar.get(Calendar.HOUR_OF_DAY);
-//        minute = calendar.get(Calendar.MINUTE);
-//        second = calendar.get(Calendar.SECOND);
-//        String content = "LOG(" + hour + ":" + minute + ":" + second + "):" + msg;
-//        historyTextArea.append(content + "\n");
-//        System.out.println(content);
-//    }
-
 	public void myLog(String name, String msg){
         eventQueue.postEvent( new LOGAWTEvent( this, name, msg));
 	}
