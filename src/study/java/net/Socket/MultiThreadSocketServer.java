@@ -10,7 +10,7 @@ import java.net.*;
 import java.util.concurrent.*;
 
 public class MultiThreadSocketServer {
-    private int port=8821;
+    private int port=9090;
     private ServerSocket serverSocket;
     private ExecutorService executorService;//线程池
     private final int POOL_SIZE=10;//单个CPU线程池大小
@@ -66,7 +66,7 @@ class Handler implements Runnable{
             PrintWriter pw=getWriter(socket);
             String msg=null;
             while((msg=br.readLine())!=null){
-                System.out.println(msg);
+                System.out.println("server: " + msg);
                 pw.println(echo(msg));
                 if(msg.equals("bye"))
                     break;

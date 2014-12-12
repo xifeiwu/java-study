@@ -24,7 +24,7 @@ public class MultiThreadSocketClient {
     private static Runnable createTask(final int taskID) {
         return new Runnable() {
             private Socket socket = null;
-            private int port=8821;
+            private int port=9090;
 
             public void run() {
                 System.out.println("Task " + taskID + ":start");

@@ -53,6 +53,7 @@ public class CollectionSubClassDemo {
           map1.put("key2", "K");
           map1.put("key3", "L");
           map1.put("key4", "M");
+          map1.put("key4", "ddd");
           displayAll(map1.keySet());
           displayAll(map1.values());
           SortedMap map2 = new TreeMap();
