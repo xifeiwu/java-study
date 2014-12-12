@@ -79,6 +79,7 @@ public class SocketConnection {
                     String remoteSocketName = getSocketName(remoteSocket);
                     myLog("LOG", remoteSocketName + " is Connected.");
                     socketPool.put(remoteSocketName, remoteSocket);
+                    break;
                 }
                 startChatting(remoteSocket);
             } catch (IOException e) {
