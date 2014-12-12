@@ -30,9 +30,7 @@ public class SocketConnection {
         mFrame = frame;
         mAddress = getLocalIP();
     }
-//    private void myLog(String msg){
-//        mFrame.myLog(msg);
-//    }
+
     private void myLog(String name, String msg){
         mFrame.myLog(name, msg);
     }
@@ -40,15 +38,17 @@ public class SocketConnection {
     private Thread ServerThread;
     public void startServerSocket(int port){
         nPort = port;
-        serverThreadFlag = true;
         ServerThread = new Thread(ServerRunnable);
         ServerThread.start();
     }
     public void stopServerSocket(){
-        if((null != ServerThread) && (!mServerSocket.isClosed())){//ServerThread.isAlive()
+        if((null != ServerThread) && (!mServerSocket.isClosed())){
             stopClientSocket();
             ServerThread.interrupt();
             try {
+                //the new Socket below is used to interrupt ServerSocket.accept() to avoid 
+                //java.net.SocketException: Socket closed
+                new Socket(mServerSocket.getInetAddress(), mServerSocket.getLocalPort()).close();
                 mServerSocket.close();
                 myLog("LOG", "ServerSocket Closed.");
             } catch (IOException ioe) {
@@ -60,10 +60,9 @@ public class SocketConnection {
         }
     }
     private ServerSocket mServerSocket;
-//    private Socket mClientSocket;
     private Socket remoteSocket;
     private Map<String, Socket> socketPool = new HashMap<String,Socket>();
-    private boolean serverThreadFlag = false;
+//    private boolean serverThreadFlag = false;
     private Runnable ServerRunnable = new Runnable() {
         @Override
         public void run() {
@@ -75,12 +74,11 @@ public class SocketConnection {
                 myLog("LOG", "ServerSocket " + mAddress + ":" + nPort + " has started");
                 mServerSocket = new ServerSocket(nPort);
                 mServerSocket.setReuseAddress(true);
-                while (!Thread.currentThread().isInterrupted() && serverThreadFlag) {
+                while (!Thread.currentThread().isInterrupted()) {
                     remoteSocket = mServerSocket.accept();
                     String remoteSocketName = getSocketName(remoteSocket);
                     myLog("LOG", remoteSocketName + " is Connected.");
                     socketPool.put(remoteSocketName, remoteSocket);
-                    serverThreadFlag = false;
                 }
                 startChatting(remoteSocket);
             } catch (IOException e) {
@@ -91,21 +89,21 @@ public class SocketConnection {
     };
 
     public boolean startClientSocket(String address, int port){
-        try{
-            new Socket(address, port).sendUrgentData(0xFF);
-        }catch(Exception ex){
-            myLog("LOG", "ServerSocket " + address + ":" + port +" is NOT open.");
-            return false;
-        }
         try {
             remoteSocket = new Socket(address, port);
+            try{
+                remoteSocket.sendUrgentData(0xFF);
+            }catch(Exception ex){
+                myLog("startClientSocket Error", "ServerSocket " + address + ":" + port +" is NOT open.");
+                return false;
+            }
         } catch (UnknownHostException e) {
             // TODO Auto-generated catch block
-            myLog("LOG", "Exception In startClientSocket UnknownHostException, As Below:");
+            myLog("startClientSocket Error", "UnknownHostException, As Below:");
             e.printStackTrace();
         } catch (IOException e) {
             // TODO Auto-generated catch block
-            myLog("LOG", "Exception In startClientSocket IOException, As Below:");
+            myLog("startClientSocket Error", "IOException, As Below:");
             e.printStackTrace();
         }
         myLog("LOG", "Socket Connection to " + address + ":" + port + " Success.");
@@ -139,6 +137,7 @@ public class SocketConnection {
     private void stopChatting(){
         if((null != ReceivingThread) && (ReceivingThread.isAlive())){
             ReceivingThread.interrupt();
+            destSocket = null;
         }else{
             myLog("LOG", "Receiving Thread is Not Start.");
         }
@@ -160,33 +159,37 @@ public class SocketConnection {
                 }
                 input.close();
             } catch (IOException e) {
-                myLog("LOG", "Exception In ReceivingRunnable IOException, As Below:");
+                myLog("ReceivingRunnable Error", "IOException, As Below:");
                 e.printStackTrace();
             }
         }
     };
 
-    public void sendMessage(String msg) {
+    public boolean sendMessage(String msg) {
+        boolean isOK = false;
         try {
             if (destSocket == null) {
-                myLog("LOG", "destSocket is null");
+                myLog("sendMessage Error", "destSocket is null");
             } else if (destSocket.getOutputStream() == null) {
-                myLog("LOG", "destSocket output stream is null.");
+                myLog("sendMessage Error", "destSocket output stream is null.");
+            } else {
+                PrintWriter out = this.getWriter(destSocket);
+                out.println(msg);
+                out.flush();
+                myLog("I say", msg);
+                isOK = true;
             }
-            PrintWriter out = this.getWriter(destSocket);
-            out.println(msg);
-            out.flush();
-            myLog("I say", msg);
         } catch (UnknownHostException e) {
-            myLog("LOG", "Exception In ReceivingRunnable UnknownHostException, As Below:");
+            myLog("sendMessage Error", "UnknownHostException, As Below:");
             e.printStackTrace();
         } catch (IOException e) {
-            myLog("LOG", "Exception In ReceivingRunnable IOException, As Below:");
+            myLog("sendMessage Error", "IOException, As Below:");
             e.printStackTrace();
         } catch (Exception e) {
-            myLog("LOG", "Exception In ReceivingRunnable Exception, As Below:");
+            myLog("sendMessage Error", "Exception, As Below:");
             e.printStackTrace();
         }
+        return isOK;
     }
 
     private PrintWriter getWriter(Socket socket){// throws IOException
